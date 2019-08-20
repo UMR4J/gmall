@@ -24,4 +24,8 @@ public interface ManageService {
     BaseAttrInfo getBaseAttrInfoById(BaseAttrValue baseAttrValue);
 
     List<SpuInfo> getSpuInfoListByCatalog3Id(SpuInfo spuInfo);
+
+    List<BaseSaleAttr> getBaseSaleAttrList();
+
+    void saveSpuInfo(SpuInfo spuInfo);
 }
