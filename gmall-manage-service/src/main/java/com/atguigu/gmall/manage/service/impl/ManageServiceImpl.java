@@ -36,6 +36,14 @@ public class ManageServiceImpl implements ManageService {
     private SpuSaleAttrMapper spuSaleAttrMapper;
     @Autowired
     private SpuSaleAttrValueMapper spuSaleAttrValueMapper;
+    @Autowired
+    private SkuInfoMapper skuInfoMapper;
+    @Autowired
+    private SkuImageMapper skuImageMapper;
+    @Autowired
+    private SkuAttrValueMapper skuAttrValueMapper;
+    @Autowired
+    private SkuSaleAttrValueMapper skuSaleAttrValueMapper;
 
     @Override
     public List<BaseCatalog1> getCatalog1() {
@@ -61,12 +69,19 @@ public class ManageServiceImpl implements ManageService {
 
     @Override
     public List<BaseAttrInfo> getAttrList(String catalog3Id) {
+
 //        Example example=new Example(BaseAttrInfo.class);
 //        example.createCriteria().andEqualTo("catalog3Id", catalog3Id);
 //        return baseAttrInfoMapper.selectByExample(example);
-        BaseAttrInfo baseAttrInfo=new BaseAttrInfo();
-        baseAttrInfo.setCatalog3Id(catalog3Id);
-        return baseAttrInfoMapper.select(baseAttrInfo);
+
+//        BaseAttrInfo baseAttrInfo=new BaseAttrInfo();
+//        baseAttrInfo.setCatalog3Id(catalog3Id);
+//        return baseAttrInfoMapper.select(baseAttrInfo);
+
+        List<BaseAttrInfo> baseAttrInfoList = baseAttrInfoMapper.getBaseAttrInfoListByCatalog3Id(catalog3Id);
+
+        return baseAttrInfoList;
+
     }
 
     @Transactional
@@ -93,7 +108,6 @@ public class ManageServiceImpl implements ManageService {
             baseAttrValueMapper.insertSelective(baseAttrValue);
         }
 
-        //TODO transaction
 
     }
 
@@ -170,6 +184,51 @@ public class ManageServiceImpl implements ManageService {
             }
 
         }
+
+    }
+
+    @Override
+    public List<SpuSaleAttr> getSpuSaleAttrListBySpuId(String spuId) {
+        return spuSaleAttrMapper.getSpuSaleAttrListBySpuId(spuId);
+    }
+
+    @Override
+    public List<SpuImage> getSpuImageListBySpuId(SpuImage spuImage) {
+
+        return spuImageMapper.select(spuImage);
+    }
+
+    @Transactional
+    @Override
+    public void saveSkuInfo(SkuInfo skuInfo) {
+
+        skuInfoMapper.insertSelective(skuInfo);
+        String skuId = skuInfo.getId();
+
+        List<SkuImage> skuImageList = skuInfo.getSkuImageList();
+        if (skuImageList!=null && skuImageList.size()>0) {
+            for (SkuImage skuImage : skuImageList) {
+                skuImage.setSkuId(skuId);
+                skuImageMapper.insertSelective(skuImage);
+            }
+        }
+
+        List<SkuAttrValue> skuAttrValueList = skuInfo.getSkuAttrValueList();
+        if (skuAttrValueList!=null && skuAttrValueList.size()>0) {
+            for (SkuAttrValue skuAttrValue : skuAttrValueList) {
+                skuAttrValue.setSkuId(skuId);
+                skuAttrValueMapper.insertSelective(skuAttrValue);
+            }
+        }
+
+        List<SkuSaleAttrValue> skuSaleAttrValueList = skuInfo.getSkuSaleAttrValueList();
+        if (skuSaleAttrValueList!=null && skuSaleAttrValueList.size()>0) {
+            for (SkuSaleAttrValue skuSaleAttrValue : skuSaleAttrValueList) {
+                skuSaleAttrValue.setSkuId(skuId);
+                skuSaleAttrValueMapper.insertSelective(skuSaleAttrValue);
+            }
+        }
+
 
     }
 }
