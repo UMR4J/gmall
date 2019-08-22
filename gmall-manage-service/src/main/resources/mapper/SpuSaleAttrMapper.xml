@@ -25,4 +25,68 @@
         WHERE ssa.spu_id=#{spuId}
     </select>
 
+    <!--List<SpuSaleAttr> selectSpuSaleAttrListCheckBySku(SkuInfo skuInfo);-->
+
+    <select id="selectSpuSaleAttrListCheckBySku" resultMap="spuSaleAttrMap">
+        SELECT ssa.id,ssa.spu_id,ssa.sale_attr_id,ssa.sale_attr_name,
+        ssav.id spu_sale_attr_value_id,ssav.sale_attr_value_name,
+				skav.sku_id,IF(skav.sku_id IS NULL,0,1) is_checked
+        FROM spu_sale_attr ssa
+        INNER JOIN spu_sale_attr_value ssav
+        ON ssa.spu_id=ssav.spu_id AND ssa.sale_attr_id=ssav.sale_attr_id
+        LEFT JOIN sku_sale_attr_value skav
+        ON skav.sale_attr_id=ssa.sale_attr_id AND skav.sale_attr_value_id=ssav.id AND skav.sku_id=#{id}
+        WHERE ssa.spu_id=#{spuId} ORDER BY ssa.sale_attr_id,ssav.id
+    </select>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!--
+    分析sql
+        1.SELECT ssa.id,ssa.spu_id,ssa.sale_attr_id,ssa.sale_attr_name,
+        ssav.id spu_sale_attr_value_id,ssav.sale_attr_value_name
+        FROM spu_sale_attr ssa INNER JOIN spu_sale_attr_value ssav
+        ON ssa.spu_id=ssav.spu_id AND ssa.sale_attr_id=ssav.sale_attr_id
+        WHERE ssa.spu_id=58;
+
+        2.SELECT * FROM sku_sale_attr_value WHERE sku_id=34
+
+
+        3.SELECT ssa.id,ssa.spu_id,ssa.sale_attr_id,ssa.sale_attr_name,
+                ssav.id spu_sale_attr_value_id,ssav.sale_attr_value_name,
+                        skav.sku_id,IF(skav.sku_id IS NULL,0,1) is_checked
+        FROM spu_sale_attr ssa
+        INNER JOIN spu_sale_attr_value ssav
+        ON ssa.spu_id=ssav.spu_id AND ssa.sale_attr_id=ssav.sale_attr_id
+        LEFT JOIN sku_sale_attr_value skav
+        ON skav.sale_attr_id=ssa.sale_attr_id AND skav.sale_attr_value_id=ssav.id AND skav.sku_id=34
+        WHERE ssa.spu_id=58;
+
+
+
+
+
+
+
+    -->
+
 </mapper>

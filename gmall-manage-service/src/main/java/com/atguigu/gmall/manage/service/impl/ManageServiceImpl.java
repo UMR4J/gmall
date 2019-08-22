@@ -1,6 +1,7 @@
 package com.atguigu.gmall.manage.service.impl;
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.bean.*;
 import com.atguigu.gmall.manage.mapper.*;
 import com.atguigu.gmall.service.ManageService;
@@ -8,7 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author zdy
@@ -230,5 +233,63 @@ public class ManageServiceImpl implements ManageService {
         }
 
 
+    }
+
+    @Override
+    public SkuInfo getSkuInfoBySkuId(String skuId) {
+
+        SkuInfo skuInfo = skuInfoMapper.selectByPrimaryKey(skuId);
+
+        SkuImage skuImage = new SkuImage();
+        skuImage.setSkuId(skuId);
+        List<SkuImage> skuImageList = skuImageMapper.select(skuImage);
+        skuInfo.setSkuImageList(skuImageList);
+
+        /*
+        SkuAttrValue skuAttrValue=new SkuAttrValue();
+        skuAttrValue.setSkuId(skuId);
+        List<SkuAttrValue> skuAttrValueList = skuAttrValueMapper.select(skuAttrValue);
+        skuInfo.setSkuAttrValueList(skuAttrValueList);
+
+        SkuSaleAttrValue skuSaleAttrValue=new SkuSaleAttrValue();
+        skuSaleAttrValue.setSkuId(skuId);
+        List<SkuSaleAttrValue> skuSaleAttrValueList = skuSaleAttrValueMapper.select(skuSaleAttrValue);
+        skuInfo.setSkuSaleAttrValueList(skuSaleAttrValueList);*/
+        //TODO
+
+        return skuInfo;
+    }
+
+    @Override
+    public List<SpuSaleAttr> selectSpuSaleAttrListCheckBySku(SkuInfo skuInfo) {
+        return spuSaleAttrMapper.selectSpuSaleAttrListCheckBySku(skuInfo);
+    }
+
+    @Override
+    public String getKeyIsSpuSaleAttrValueAndValueIsSkuIdJSON(SkuInfo skuInfo) {
+        List<SkuSaleAttrValue> skuSaleAttrValueList= skuSaleAttrValueMapper.getSkuSaleAttrValueListBySpuId(skuInfo);
+
+        Map<String,String> map=new HashMap<>();
+        String valueKey="";
+        for (int i = 0; i < skuSaleAttrValueList.size(); i++) {
+
+            SkuSaleAttrValue skuSaleAttrValue = skuSaleAttrValueList.get(i);
+            if(valueKey.length()>0){
+                valueKey+="|";
+            }
+            valueKey+=skuSaleAttrValue.getSaleAttrValueId();
+
+
+            if(i==skuSaleAttrValueList.size()-1||!skuSaleAttrValue.getSkuId().equals(skuSaleAttrValueList.get(i + 1).getSkuId())){
+                map.put(valueKey, skuSaleAttrValue.getSkuId());
+                valueKey="";
+            }
+
+
+        }
+
+        String valuesSkuJson = JSON.toJSONString(map);
+
+        return valuesSkuJson;
     }
 }

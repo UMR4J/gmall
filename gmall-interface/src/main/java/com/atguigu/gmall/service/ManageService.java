@@ -34,4 +34,10 @@ public interface ManageService {
     List<SpuImage> getSpuImageListBySpuId(SpuImage spuImage);
 
     void saveSkuInfo(SkuInfo skuInfo);
+
+    SkuInfo getSkuInfoBySkuId(String skuId);
+
+    List<SpuSaleAttr> selectSpuSaleAttrListCheckBySku(SkuInfo skuInfo);
+
+    String getKeyIsSpuSaleAttrValueAndValueIsSkuIdJSON(SkuInfo skuInfo);
 }
