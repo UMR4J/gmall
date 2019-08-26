@@ -3,6 +3,7 @@ package com.atguigu.gmall.item.controller;
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.atguigu.gmall.bean.SkuInfo;
 import com.atguigu.gmall.bean.SpuSaleAttr;
+import com.atguigu.gmall.service.ListService;
 import com.atguigu.gmall.service.ManageService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,6 +22,9 @@ public class ItemController {
     @Reference
     private ManageService manageService;
 
+    @Reference
+    private ListService listService;
+
     @RequestMapping("{skuId}.html")
     public String skuInfoPage(@PathVariable(value = "skuId") String skuId, Model model){
 
@@ -32,6 +36,8 @@ public class ItemController {
         model.addAttribute("skuInfo", skuInfo);
         model.addAttribute("spuSaleAttrList", spuSaleAttrList);
         model.addAttribute("valuesSkuJson", valuesSkuJson);
+
+        listService.incrHotScore(skuId);  //最终应该由异步方式调用
 
         return "item";
     }
