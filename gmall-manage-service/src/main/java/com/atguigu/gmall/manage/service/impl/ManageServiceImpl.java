@@ -466,4 +466,12 @@ public class ManageServiceImpl implements ManageService {
 
         return valuesSkuJson;
     }
+
+    @Override
+    public List<BaseAttrInfo> getAttrList(List<String> attrValueIdList) {
+
+        String attrValueIdStr = org.apache.commons.lang3.StringUtils.join(attrValueIdList.toArray(), ",");
+        System.out.println("attrValueIdStr="+attrValueIdStr);
+        return baseAttrInfoMapper.getBaseAttrInfoListByattrValueIdStr(attrValueIdStr);
+    }
 }

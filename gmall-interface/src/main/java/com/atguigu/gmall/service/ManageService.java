@@ -40,4 +40,6 @@ public interface ManageService {
     List<SpuSaleAttr> selectSpuSaleAttrListCheckBySku(SkuInfo skuInfo);
 
     String getKeyIsSpuSaleAttrValueAndValueIsSkuIdJSON(SkuInfo skuInfo);
+
+    List<BaseAttrInfo> getAttrList(List<String> attrValueIdList);
 }

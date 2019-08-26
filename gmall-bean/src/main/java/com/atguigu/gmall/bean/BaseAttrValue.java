@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
+import javax.persistence.Transient;
 import java.io.Serializable;
 
 /**
@@ -19,5 +20,9 @@ public class BaseAttrValue implements Serializable {
     private String valueName;
     @Column
     private String attrId;
+    //该字段用于制作面包屑
+    @Transient
+    private String urlParam;
+
 }
 
