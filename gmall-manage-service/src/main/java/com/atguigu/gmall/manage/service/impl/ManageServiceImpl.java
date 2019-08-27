@@ -363,7 +363,7 @@ public class ManageServiceImpl implements ManageService {
                 }else {
                     System.out.println("等待");
                     Thread.sleep(1000);
-                    return getSkuInfoBySkuId(skuId);
+                    return getSkuInfoBySkuId(skuId);//应该掉这个return getSkuInfo2(skuId);
                 }
 
             }else {
