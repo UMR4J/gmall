@@ -57,4 +57,8 @@ public interface UserService {
     void delUser(UserInfo userInfo);
 
     List<UserAddress> getUserAddressListByUserId(UserAddress userAddress);
+
+    UserInfo login(UserInfo userInfo);
+
+    UserInfo verify(String userId);
 }

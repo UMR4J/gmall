@@ -3,6 +3,7 @@ package com.atguigu.gmall.item.controller;
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.atguigu.gmall.bean.SkuInfo;
 import com.atguigu.gmall.bean.SpuSaleAttr;
+import com.atguigu.gmall.config.LoginRequie;
 import com.atguigu.gmall.service.ListService;
 import com.atguigu.gmall.service.ManageService;
 import org.springframework.stereotype.Controller;
@@ -25,6 +26,7 @@ public class ItemController {
     @Reference
     private ListService listService;
 
+    @LoginRequie(autoRedirect = true)
     @RequestMapping("{skuId}.html")
     public String skuInfoPage(@PathVariable(value = "skuId") String skuId, Model model){
 
