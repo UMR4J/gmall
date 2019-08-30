@@ -7,12 +7,10 @@ import com.atguigu.gmall.cart.handler.CartCookieHandler;
 import com.atguigu.gmall.config.LoginRequie;
 import com.atguigu.gmall.service.CartService;
 import com.atguigu.gmall.service.ManageService;
-import lombok.extern.log4j.Log4j;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,26 +34,26 @@ public class CartController {
 
     @RequestMapping("cartList")
     @LoginRequie(autoRedirect = false)
-    public  String cartList(HttpServletRequest request,HttpServletResponse response){
+    public String cartList(HttpServletRequest request, HttpServletResponse response) {
 
         String userId = (String) request.getAttribute("userId");
 
-        List<CartInfo> cartList=null;
+        List<CartInfo> cartList = null;
 
-        if(userId!=null){
+        if (userId != null) {
 
-            List<CartInfo> cartListCookie=cartCookieHandler.getCartList(request);
+            List<CartInfo> cartListCookie = cartCookieHandler.getCartList(request);
 
-            if(cartListCookie!=null&&cartListCookie.size()>0){
+            if (cartListCookie != null && cartListCookie.size() > 0) {
 
-                cartList=cartService.mergeToCartList(cartListCookie,userId);
-                cartCookieHandler.deleteCartCookie(request,response);
+                cartList = cartService.mergeToCartList(cartListCookie, userId);
+                cartCookieHandler.deleteCartCookie(request, response);
 
-            }else {
+            } else {
                 cartList = cartService.getCartList(userId);
             }
 
-        }else {
+        } else {
             cartList = cartCookieHandler.getCartList(request);
         }
 
@@ -66,31 +64,68 @@ public class CartController {
     }
 
 
-        @LoginRequie(autoRedirect=false)
+    @LoginRequie(autoRedirect = false)
     @RequestMapping("addToCart")
-    public String addToCart(HttpServletRequest request, HttpServletResponse response){
+    public String addToCart(HttpServletRequest request, HttpServletResponse response) {
 
         String skuId = request.getParameter("skuId");
         String skuNum = request.getParameter("skuNum");
 
 
-
         String userId = (String) request.getAttribute("userId");
 
-        if(userId!=null){
+        if (userId != null) {
             cartService.addToCart(skuId, userId, Integer.parseInt(skuNum));
-        }else {
+        } else {
             // 说明用户没有登录没有登录放到cookie中
             cartCookieHandler.addToCart(request, response, skuId, userId, Integer.parseInt(skuNum));
         }
 
         SkuInfo skuInfo = manageService.getSkuInfoBySkuId(skuId);
-        request.setAttribute("skuInfo",skuInfo);
-        request.setAttribute("skuNum",skuNum);
+        request.setAttribute("skuInfo", skuInfo);
+        request.setAttribute("skuNum", skuNum);
 
 
         return "success";
     }
 
+    @RequestMapping("checkCart")
+    @ResponseBody
+    @LoginRequie(autoRedirect = false)
+    public void checkCart(HttpServletRequest request, HttpServletResponse response) {
 
+        String skuId = request.getParameter("skuId");
+        String isChecked = request.getParameter("isChecked");
+        String userId = (String) request.getAttribute("userId");
+        if (userId != null) {
+            cartService.checkCart(skuId, isChecked, userId);
+        } else {
+            cartCookieHandler.checkCart(request, response, skuId, isChecked);
+        }
+
+
+    }
+
+    @RequestMapping("toTrade")
+    @LoginRequie(autoRedirect = true)
+    public String toTrade(HttpServletRequest request, HttpServletResponse response) {
+
+        String userId = (String) request.getAttribute("userId");
+        if(userId!=null){
+            List<CartInfo> cartListCookie = cartCookieHandler.getCartList(request);
+
+            if (cartListCookie != null && cartListCookie.size() > 0) {
+
+                List<CartInfo> cartList = cartService.mergeToCartList(cartListCookie, userId);
+                cartCookieHandler.deleteCartCookie(request, response);
+
+            }
+
+
+        }
+
+
+        return "redirect://trade.gmall.com/trade";
+
+    }
 }

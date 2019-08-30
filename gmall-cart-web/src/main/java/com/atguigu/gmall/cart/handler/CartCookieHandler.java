@@ -25,33 +25,33 @@ public class CartCookieHandler {
     // 定义购物车名称
     private String cookieCartName = "CART";
     // 设置cookie 过期时间
-    private int COOKIE_CART_MAXAGE=7*24*3600;
+    private int COOKIE_CART_MAXAGE = 7 * 24 * 3600;
 
     @Reference
     private ManageService manageService;
 
-    public void addToCart(HttpServletRequest request, HttpServletResponse response, String skuId, String userId, Integer skuNum){
+    public void addToCart(HttpServletRequest request, HttpServletResponse response, String skuId, String userId, Integer skuNum) {
 
         String cartJson = CookieUtil.getCookieValue(request, cookieCartName, true);
-        List<CartInfo> cartInfoList=new ArrayList<>();
+        List<CartInfo> cartInfoList = new ArrayList<>();
 
-        boolean isExist=false;
+        boolean isExist = false;
 
-        if(cartJson!=null){
+        if (cartJson != null) {
             cartInfoList = JSON.parseArray(cartJson, CartInfo.class);
             for (CartInfo cartInfo : cartInfoList) {
 
-                if(cartInfo.getSkuId().equals(skuId)){
-                    cartInfo.setSkuNum(cartInfo.getSkuNum()+skuNum);
+                if (cartInfo.getSkuId().equals(skuId)) {
+                    cartInfo.setSkuNum(cartInfo.getSkuNum() + skuNum);
                     cartInfo.setSkuPrice(cartInfo.getCartPrice());
-                    isExist=true;
+                    isExist = true;
                     break;
                 }
 
             }
         }
-        if(!isExist){
-            CartInfo cartInfo=new CartInfo();
+        if (!isExist) {
+            CartInfo cartInfo = new CartInfo();
             SkuInfo skuInfo = manageService.getSkuInfoBySkuId(skuId);
             cartInfo.setSkuNum(skuNum);
             cartInfo.setUserId(userId);
@@ -67,18 +67,16 @@ public class CartCookieHandler {
         CookieUtil.setCookie(request, response, cookieCartName, JSON.toJSONString(cartInfoList), COOKIE_CART_MAXAGE, true);
 
 
-
-
     }
 
 
     public List<CartInfo> getCartList(HttpServletRequest request) {
 
-        List<CartInfo> cartInfoList=new ArrayList<>();
+        List<CartInfo> cartInfoList = new ArrayList<>();
 
         String cartInfoListJson = CookieUtil.getCookieValue(request, cookieCartName, true);
-        if(!StringUtils.isEmpty(cartInfoListJson)){
-            cartInfoList= JSON.parseArray(cartInfoListJson, CartInfo.class);
+        if (!StringUtils.isEmpty(cartInfoListJson)) {
+            cartInfoList = JSON.parseArray(cartInfoListJson, CartInfo.class);
 
         }
 
@@ -89,5 +87,20 @@ public class CartCookieHandler {
 
     public void deleteCartCookie(HttpServletRequest request, HttpServletResponse response) {
         CookieUtil.deleteCookie(request, response, cookieCartName);
+    }
+
+    public void checkCart(HttpServletRequest request, HttpServletResponse response, String skuId, String isChecked) {
+
+        List<CartInfo> cartList = getCartList(request);
+
+        for (CartInfo cartInfo : cartList) {
+            if (cartInfo.getSkuId().equals(skuId)) {
+                cartInfo.setIsChecked(isChecked);
+            }
+        }
+
+        CookieUtil.setCookie(request, response, cookieCartName, JSON.toJSONString(cartList), COOKIE_CART_MAXAGE, true);
+
+
     }
 }

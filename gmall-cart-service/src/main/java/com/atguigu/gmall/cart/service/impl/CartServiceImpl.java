@@ -11,6 +11,7 @@ import com.atguigu.gmall.config.RedisUtil;
 import com.atguigu.gmall.service.CartService;
 import com.atguigu.gmall.service.ManageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import redis.clients.jedis.Jedis;
 
 import java.util.*;
@@ -145,7 +146,113 @@ public class CartServiceImpl implements CartService {
 
         }
 
-        return loadCartCache(userId);
+        //return loadCartCache(userId);
+
+        //以下代码为解决合并购物车的时候，勾选状态可能会丢掉，因为DB中没有存储！
+        List<CartInfo> cartList = loadCartCache(userId);
+
+        for (CartInfo cartInfoCk : cartListCookie) {
+            if("1".equals(cartInfoCk.getIsChecked())){
+
+                for (CartInfo info : cartList) {
+
+                    if(info.getSkuId().equals(cartInfoCk.getSkuId())){
+                        info.setIsChecked(cartInfoCk.getIsChecked());
+                        checkCart(info.getSkuId(), cartInfoCk.getIsChecked(), userId);//更新到redis
+                    }
+
+                }
+            }
+        }
+
+        return cartList;
+
+    }
+
+    @Override
+    public void checkCart(String skuId, String isChecked, String userId) {
+
+        Jedis jedis = null;
+
+        try {
+            jedis = redisUtil.getJedis();
+            String cartKey = CartConst.USER_KEY_PREFIX + userId + CartConst.USER_CART_KEY_SUFFIX;
+            String cartInfoJson = jedis.hget(cartKey, skuId);
+            CartInfo cartInfo = JSON.parseObject(cartInfoJson, CartInfo.class);
+            cartInfo.setIsChecked(isChecked);
+            String newCartInfoJson = JSON.toJSONString(cartInfo);
+            jedis.hset(cartKey, skuId, newCartInfoJson);
+
+            String cartKeyChecked=CartConst.USER_KEY_PREFIX + userId + CartConst.USER_CHECKED_KEY_SUFFIX;
+            if("1".equals(isChecked)){
+                jedis.hset(cartKeyChecked, skuId, newCartInfoJson);
+            }else {
+                jedis.hdel(cartKeyChecked,skuId);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (jedis != null) {
+                jedis.close();
+            }
+        }
+
+    }
+
+    @Override
+    public List<CartInfo> getCartCheckedList(String userId) {
+        Jedis jedis = null;
+        List<CartInfo> cartInfoList=new ArrayList<>();
+
+        try {
+            jedis = redisUtil.getJedis();
+            String cartKeyChecked=CartConst.USER_KEY_PREFIX + userId + CartConst.USER_CHECKED_KEY_SUFFIX;
+            List<String> cartInfoJsonList = jedis.hvals(cartKeyChecked);
+
+            for (String cartInfoJson : cartInfoJsonList) {
+                CartInfo cartInfo = JSON.parseObject(cartInfoJson, CartInfo.class);
+                cartInfoList.add(cartInfo);
+            }
+
+            return cartInfoList;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (jedis != null) {
+                jedis.close();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void deleteCartCheckedList(String userId) {
+        List<CartInfo> cartList = getCartCheckedList(userId);
+
+
+        Jedis jedis = null;
+
+        try {
+            jedis = redisUtil.getJedis();
+            String cartKeyChecked=CartConst.USER_KEY_PREFIX + userId + CartConst.USER_CHECKED_KEY_SUFFIX;
+            String cartKey = CartConst.USER_KEY_PREFIX + userId + CartConst.USER_CART_KEY_SUFFIX;
+            jedis.del(cartKeyChecked);
+            for (CartInfo cartInfo : cartList) {
+                jedis.hdel(cartKey, cartInfo.getSkuId());
+                cartInfoMapper.deleteByPrimaryKey(cartInfo.getId());
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (jedis != null) {
+                jedis.close();
+            }
+        }
+
+
+
     }
 
     private List<CartInfo> loadCartCache(String userId) {
