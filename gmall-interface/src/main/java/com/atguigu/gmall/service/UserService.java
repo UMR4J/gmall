@@ -61,4 +61,6 @@ public interface UserService {
     UserInfo login(UserInfo userInfo);
 
     UserInfo verify(String userId);
+
+    List<UserAddress> getUserAddressList(String userId);
 }

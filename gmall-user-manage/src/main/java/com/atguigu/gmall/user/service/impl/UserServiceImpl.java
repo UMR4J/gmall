@@ -139,4 +139,13 @@ public class UserServiceImpl implements UserService {
 
         return null;
     }
+
+    @Override
+    public List<UserAddress> getUserAddressList(String userId) {
+        UserAddress userAddress = new UserAddress();
+        userAddress.setUserId(userId);
+        List<UserAddress> userAddressList = userAddressMapper.select(userAddress);
+        return userAddressList;
+
+    }
 }

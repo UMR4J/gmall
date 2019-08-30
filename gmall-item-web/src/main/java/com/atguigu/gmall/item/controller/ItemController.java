@@ -26,7 +26,7 @@ public class ItemController {
     @Reference
     private ListService listService;
 
-    @LoginRequie(autoRedirect = true)
+    //@LoginRequie(autoRedirect = true)
     @RequestMapping("{skuId}.html")
     public String skuInfoPage(@PathVariable(value = "skuId") String skuId, Model model){
 
