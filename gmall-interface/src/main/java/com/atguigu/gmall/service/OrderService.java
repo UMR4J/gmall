@@ -12,4 +12,7 @@ public interface OrderService {
     String getTradeNo(String userId);
     boolean checkTradeCode(String userId,String tradeCodeNo);
     void  delTradeCode(String userId);
+    boolean checkStock(String skuId, Integer skuNum);
+
+    OrderInfo getOrderInfo(String orderId);
 }
