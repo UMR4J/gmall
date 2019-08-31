@@ -130,4 +130,18 @@ public class OrderServiceImpl implements OrderService {
 
         return "1".equals(result);
     }
+
+    @Override
+    public OrderInfo getOrderInfo(String orderId) {
+        OrderInfo orderInfo = orderInfoMapper.selectByPrimaryKey(orderId);
+
+        OrderDetail orderDetail=new OrderDetail();
+        orderDetail.setOrderId(orderId);
+        List<OrderDetail> orderDetailList = orderDetailMapper.select(orderDetail);
+
+        orderInfo.setOrderDetailList(orderDetailList);
+
+        return orderInfo;
+
+    }
 }
