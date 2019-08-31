@@ -24,6 +24,7 @@
         <module name="gmall-service-util" />
         <module name="gmall-user-manage" />
         <module name="gmall-web-util" />
+        <module name="gware-manage" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -45,6 +46,7 @@
       <module name="gmall-service-util" target="1.8" />
       <module name="gmall-user-manage" target="1.8" />
       <module name="gmall-web-util" target="1.8" />
+      <module name="gware-manage" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">

@@ -87,6 +87,16 @@ public class OrderController {
         orderInfo.setOrderStatus(OrderStatus.UNPAID);
         orderInfo.setProcessStatus(ProcessStatus.UNPAID);
 
+        //校验库存
+        List<OrderDetail> orderDetailList = orderInfo.getOrderDetailList();
+        for (OrderDetail orderDetail : orderDetailList) {
+            boolean res = orderService.checkStock(orderDetail.getSkuId(), orderDetail.getSkuNum());
+            if(!res){
+                request.setAttribute("errMsg","商品库存不足，请重新下单！");
+                return "tradeFail";
+            }
+        }
+
         String orderId = orderService.saveOrder(orderInfo);
 
         //删除购物车中选中的商品
