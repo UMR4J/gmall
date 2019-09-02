@@ -16,4 +16,8 @@ public interface PaymentService {
     void updatePaymentInfo(String outTradeNo, Map<String, String> paramMap);
 
     boolean refund(String orderId);
+
+    Map createNative(String orderId);
+
+    void sendPaymentResult(PaymentInfo paymentInfo, String result);
 }
