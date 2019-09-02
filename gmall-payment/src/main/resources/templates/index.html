@@ -43,6 +43,7 @@
             <li>
               <span>
                 <input type="radio" id="weixin" name="pay" value="wx" />
+                <input type="hidden" id="orderId" th:value="${orderId}">
                 <img src="/img/weixin.png" alt="">微信支付
               </span>
               <br/>
@@ -71,7 +72,8 @@
 
 
 	</body>
-  <script type="text/javascript">
+    <!--th:inline="javascript"-->
+  <script type="text/javascript" >
       $(function() {
           $("#paymentButton").click(function () {
               $("#paymentForm").attr("action","/"+$("input[type='radio']:checked").val()+"/submit")  ;
@@ -90,8 +92,10 @@
     })
 
       /*点击微信支付生成二维码*/
+      var orderId=$("#orderId").val()
+      console.log(orderId)
       $("#weixin").click(function () {
-          $.post("wx/submit",function (data) {
+          $.post("wx/submit",{"orderId":orderId},function (data) {
               var qr = window.qr = new QRious({
                   element: document.getElementById('qrious'),
                   size: 250,

@@ -102,21 +102,22 @@ public class PaymentController {
     @ResponseBody
     public String paymentNotify(@RequestParam Map<String, String> paramMap, HttpServletRequest request) throws AlipayApiException {
 
-        boolean flag = AlipaySignature.rsaCheckV1(paramMap, AlipayConfig.alipay_public_key, "utf-8",AlipayConfig.sign_type);
-        if(!flag){
+        boolean flag = AlipaySignature.rsaCheckV1(paramMap, AlipayConfig.alipay_public_key, "utf-8", AlipayConfig.sign_type);
+        if (!flag) {
             return "fail";
         }
 
         String trade_status = paramMap.get("trade_status");
-        if ("TRADE_SUCCESS".equals(trade_status) || "TRADE_FINISHED".equals(trade_status)){
+        if ("TRADE_SUCCESS".equals(trade_status) || "TRADE_FINISHED".equals(trade_status)) {
 
             String outTradeNo = paramMap.get("out_trade_no");
             PaymentInfo paymentInfoHas = paymentService.getPaymentInfo(outTradeNo);
-            if (paymentInfoHas.getPaymentStatus()==PaymentStatus.PAID || paymentInfoHas.getPaymentStatus()==PaymentStatus.ClOSED){
+            if (paymentInfoHas.getPaymentStatus() == PaymentStatus.PAID || paymentInfoHas.getPaymentStatus() == PaymentStatus.ClOSED) {
                 return "fail";
-            }else {
+            } else {
                 //更新paymentInfo状态
-                paymentService.updatePaymentInfo(outTradeNo,paramMap);
+                paymentService.updatePaymentInfo(outTradeNo, paramMap);
+                //sendPaymentResult(paymentInfoHas,"success");
                 return "success";
             }
 
@@ -127,10 +128,29 @@ public class PaymentController {
 
     @RequestMapping("refund")
     @ResponseBody
-    public String refund(String orderId){
+    public String refund(String orderId) {
         boolean flag = paymentService.refund(orderId);
-        System.out.println("flag:"+flag);
+        System.out.println("flag:" + flag);
         return String.valueOf(flag);
+    }
+
+    @RequestMapping("wx/submit")
+    @ResponseBody
+    public Map createNative(String orderId) {
+
+        Map map = paymentService.createNative(orderId);
+        System.out.println(map.get("code_url"));
+        return map;
+
+
+    }
+
+    // 发送验证,这是一个测试方法，正常应该写在支付后的异步回调方法中
+    @RequestMapping("sendPaymentResult")
+    @ResponseBody
+    public String sendPaymentResult(PaymentInfo paymentInfo,@RequestParam("result") String result){
+        paymentService.sendPaymentResult(paymentInfo,result);
+        return "sent payment result";
     }
 
 }
