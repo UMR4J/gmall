@@ -19,5 +19,15 @@ public interface PaymentService {
 
     Map createNative(String orderId);
 
+    void updatePaymentInfo(String out_trade_no, PaymentInfo paymentInfoUPD);
+
     void sendPaymentResult(PaymentInfo paymentInfo, String result);
+
+    void sendDelayPaymentResult(String outTradeNo,int delaySec ,int checkCount);
+
+    boolean checkPayment(String outTradeNo);
+
+    PaymentInfo getPaymentInfo(PaymentInfo paymentInfoQuery);
+
+    void closePayment(String id);
 }

@@ -3,6 +3,9 @@ package com.atguigu.gmall.service;
 import com.atguigu.gmall.bean.OrderInfo;
 import com.atguigu.gmall.bean.enums.ProcessStatus;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author zdy
  * @create 2019-08-30 21:09
@@ -20,4 +23,12 @@ public interface OrderService {
     void updateOrderStatus(String orderId, ProcessStatus paid);
 
     void sendOrderStatus(String orderId);
+
+    List<OrderInfo> getExpiredOrderList();
+
+    void execExpiredOrder(OrderInfo orderInfo);
+
+    Map initWareOrder(OrderInfo orderInfo);
+
+    List<OrderInfo> splitOrder(String orderId, String wareSkuMap);
 }

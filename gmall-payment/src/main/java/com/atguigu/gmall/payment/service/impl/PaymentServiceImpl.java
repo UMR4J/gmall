@@ -1,10 +1,13 @@
 package com.atguigu.gmall.payment.service.impl;
 
 import com.alibaba.dubbo.config.annotation.Reference;
+import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.fastjson.JSON;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
+import com.alipay.api.request.AlipayTradeQueryRequest;
 import com.alipay.api.request.AlipayTradeRefundRequest;
+import com.alipay.api.response.AlipayTradeQueryResponse;
 import com.alipay.api.response.AlipayTradeRefundResponse;
 import com.atguigu.gmall.bean.OrderInfo;
 import com.atguigu.gmall.bean.PaymentInfo;
@@ -16,15 +19,12 @@ import com.atguigu.gmall.service.OrderService;
 import com.atguigu.gmall.service.PaymentService;
 import com.atguigu.gmall.util.HttpClient;
 import com.github.wxpay.sdk.WXPayUtil;
+import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.command.ActiveMQMapMessage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 
-import javax.jms.Connection;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
+import javax.jms.*;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,7 +34,7 @@ import java.util.Map;
  * @author zdy
  * @create 2019-08-31 19:40
  */
-@Service//不需要用dubbo中的@Service
+@Service
 public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
@@ -69,6 +69,14 @@ public class PaymentServiceImpl implements PaymentService {
         example.createCriteria().andEqualTo("outTradeNo",outTradeNo);
 
         paymentInfoMapper.updateByExampleSelective(paymentInfoUpd, example);
+    }
+
+    @Override
+    public void updatePaymentInfo(String out_trade_no, PaymentInfo paymentInfoUPD) {
+        Example example = new Example(PaymentInfo.class);
+        example.createCriteria().andEqualTo("outTradeNo",out_trade_no);
+
+        paymentInfoMapper.updateByExampleSelective(paymentInfoUPD,example);
     }
 
     @Override
@@ -171,5 +179,102 @@ public class PaymentServiceImpl implements PaymentService {
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void sendDelayPaymentResult(String outTradeNo, int delaySec, int checkCount) {
+
+        Connection connection = activeMQUtil.getConnection();
+
+        try {
+
+            connection.start();
+            Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+
+            Queue payment_result_check_queue = session.createQueue("PAYMENT_RESULT_CHECK_QUEUE");
+            MessageProducer producer = session.createProducer(payment_result_check_queue);
+
+            MapMessage mapMessage=new ActiveMQMapMessage();
+            mapMessage.setString("outTradeNo",outTradeNo);
+            mapMessage.setInt("delaySec",delaySec);
+            mapMessage.setInt("checkCount",checkCount);
+
+            //设置延时多少时间
+            mapMessage.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, delaySec*1000);
+
+            producer.send(mapMessage);
+            session.commit();
+
+            producer.close();
+            session.close();
+            connection.close();
+
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public boolean checkPayment(String outTradeNo) {
+
+        PaymentInfo paymentInfo = getPaymentInfo(outTradeNo);
+        if(paymentInfo.getPaymentStatus().equals(PaymentStatus.PAID)||paymentInfo.getPaymentStatus().equals(PaymentStatus.ClOSED)){
+            return true;
+        }
+
+        AlipayTradeQueryRequest request = new AlipayTradeQueryRequest();
+        Map<String,Object> map=new HashMap<>();
+        map.put("out_trade_no", outTradeNo);
+        request.setBizContent(JSON.toJSONString(map));
+
+        AlipayTradeQueryResponse response=new AlipayTradeQueryResponse();
+        try {
+            response = alipayClient.execute(request);
+        } catch (AlipayApiException e) {
+            e.printStackTrace();
+        }
+
+        if(response.isSuccess()){
+
+            if("TRADE_SUCCESS".equals(response.getTradeStatus())||"TRADE_FINISHED".equals(response.getTradeStatus())){
+
+                // 改支付状态
+                PaymentInfo paymentInfoUpd = new PaymentInfo();
+                paymentInfoUpd.setPaymentStatus(PaymentStatus.PAID);
+                updatePaymentInfo(outTradeNo, paymentInfoUpd);
+
+                sendPaymentResult(paymentInfo,"success");
+                return true;
+
+
+
+            }else {
+                return false;
+            }
+
+        }else {
+            return false;
+        }
+
+
+
+    }
+
+    @Override
+    public PaymentInfo getPaymentInfo(PaymentInfo paymentInfoQuery) {
+        return paymentInfoMapper.selectOne(paymentInfoQuery);
+    }
+
+    @Override
+    public void closePayment(String orderId) {
+
+        Example example = new Example(PaymentInfo.class);
+        example.createCriteria().andEqualTo("orderId",orderId);
+        PaymentInfo paymentInfo = new PaymentInfo();
+        paymentInfo.setPaymentStatus(PaymentStatus.ClOSED);
+        paymentInfoMapper.updateByExampleSelective(paymentInfo,example);
+
+
     }
 }
