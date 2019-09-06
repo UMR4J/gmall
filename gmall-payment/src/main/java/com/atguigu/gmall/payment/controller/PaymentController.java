@@ -16,6 +16,7 @@ import com.atguigu.gmall.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -89,6 +90,10 @@ public class PaymentController {
         }
 
         response.setContentType("text/html;charset=UTF-8");
+
+        //利用延时队列调用查询接口
+        paymentService.sendDelayPaymentResult(paymentInfo.getOutTradeNo(),15,3);
+
         return form;
 
     }
@@ -152,5 +157,28 @@ public class PaymentController {
         paymentService.sendPaymentResult(paymentInfo,result);
         return "sent payment result";
     }
+
+
+    //测试方法，向支付宝查询订单是否支付成功
+    @RequestMapping("queryPaymentResult")
+    @ResponseBody
+    public String queryPaymentResult(HttpServletRequest request){
+        String orderId = request.getParameter("orderId");
+        if(!StringUtils.isEmpty(orderId)){
+            PaymentInfo paymentInfoQuery=new PaymentInfo();
+            paymentInfoQuery.setOrderId(orderId);
+            PaymentInfo paymentInfo = paymentService.getPaymentInfo(paymentInfoQuery);
+            if(paymentInfo==null){
+                return String.valueOf(false);
+            }
+            boolean result = paymentService.checkPayment(paymentInfo.getOutTradeNo());
+            return String.valueOf(result);
+
+        }else {
+            return String.valueOf(false);
+        }
+
+    }
+
 
 }
